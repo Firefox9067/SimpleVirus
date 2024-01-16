@@ -1,4 +1,5 @@
 # SimpleVirus
+![.Net](https://img.shields.io/badge/.NET-5C2D91?style=flat&logo=.net&logoColor=white)
 사용자를 귀찮게하는 간단한 바이러스입니다.
 
 ## 💻 About Project
